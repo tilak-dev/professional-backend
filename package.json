@@ -4,10 +4,13 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/index.js"
   },
   "keywords": [],
   "author": "tilak",
   "license": "ISC",
-  "description": "Learning professional_backend in mern stack"
+  "description": "Learning professional_backend in mern stack",
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
 }
