@@ -1,0 +1,13 @@
+{
+  "name": "professional_backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "tilak",
+  "license": "ISC",
+  "description": "Learning professional_backend in mern stack"
+}
