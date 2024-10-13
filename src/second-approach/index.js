@@ -23,3 +23,17 @@ const app = express();
     process.exit(1);
   }
 })();
+
+
+// for handling incoming requests data base
+const asyncHandler = (fun) => async (req, res, next) => {
+  try {
+    await fun(req, res, next);
+  } catch (error) {
+    console.error(error);
+    return res.status(error.code || 500).json({
+      success: false,
+      message: error.message || "An unexpected error occurred.",
+    });
+  }
+};
