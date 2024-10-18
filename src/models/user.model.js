@@ -71,7 +71,6 @@ userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
       //payload
-
       id: this._id,
     },
     process.env.REPRESS_TOKEN_SECRET,
