@@ -24,7 +24,13 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   // check for image :avatar
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  let coverImageLocalPath;
+  if(req?.files?.coverImage?.length > 0 ){
+    coverImageLocalPath = req.files?.coverImage[0]?.path;
+  }else {
+    coverImageLocalPath = null;
+  }
+
   console.log("bhai files from multer", req.files);
   //check for cover  image
   if (!avatarLocalPath) {
@@ -32,7 +38,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   //upload them on cloudinary , avatar
   const uploadedAvatar = await uploadOnCloudinary(avatarLocalPath);
-  const uploadedCoverImage = await uploadOnCloudinary(coverImageLocalPath);
+  const uploadedCoverImage = await uploadOnCloudinary(coverImageLocalPath );
   if (!uploadedAvatar) {
     throw new ApiError(400, "Failed to upload avatar to cloudinary");
   }
