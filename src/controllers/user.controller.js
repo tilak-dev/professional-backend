@@ -47,10 +47,10 @@ const registerUser = asyncHandler(async (req, res) => {
   const user = await User.create({
     fullName,
     email,
-    username: username.toLowerCase(),
+    username:username.toLowerCase(),
     password,
     avatar: uploadedAvatar.url,
-    coverImage: uploadedCoverImage?.secure_url || "",
+    coverImage: uploadedCoverImage?.secure_url,
   });
   // validation of user created successfully
   if (!user) {
@@ -61,10 +61,13 @@ const registerUser = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   );
 
+  if(!createdUser){
+    throw new ApiError(500, "Failed to create user");
+  }
   // return res
   return res
     .status(201)
-    .json(new ApiResponse(200, user, true, "user created successfully"));
+    .json(new ApiResponse(200, createdUser, true, "user created successfully"));
 });
 
 export { registerUser };

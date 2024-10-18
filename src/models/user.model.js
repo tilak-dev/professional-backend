@@ -30,7 +30,7 @@ const userSchema = new Schema(
       trim: true,
       index: true, // isse fullname search system me aa jayega and expensive hota h
     },
-    avater: {
+    avatar: {
       type: String, // cloudinary url
       required: true,
     },
