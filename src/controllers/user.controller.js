@@ -8,7 +8,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   //get user details from frontend
-  const { fullName, email, username, password } = req.body
+  const { fullName, email, username, password } = req.body;
   //validation
   if (
     [email, username, password, fullName].some((field) => field?.trim() === "")
@@ -25,9 +25,13 @@ const registerUser = asyncHandler(async (req, res) => {
   // check for image :avatar
   const avatarLocalPath = req.files?.avatar[0]?.path;
   let coverImageLocalPath;
-  if(req?.files?.coverImage?.length > 0 ){
+  if (
+    req?.files &&
+    Array.isArray(req?.files?.coverImage) &&
+    req?.files?.coverImage?.length > 0
+  ) {
     coverImageLocalPath = req.files?.coverImage[0]?.path;
-  }else {
+  } else {
     coverImageLocalPath = null;
   }
 
@@ -38,7 +42,6 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   //upload them on cloudinary , avatar
   const uploadedAvatar = await uploadOnCloudinary(avatarLocalPath);
-  const uploadedCoverImage = await uploadOnCloudinary(coverImageLocalPath );
   if (!uploadedAvatar) {
     throw new ApiError(400, "Failed to upload avatar to cloudinary");
   }
@@ -47,7 +50,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const user = await User.create({
     fullName,
     email,
-    username:username.toLowerCase(),
+    username: username.toLowerCase(),
     password,
     avatar: uploadedAvatar.url,
     coverImage: uploadedCoverImage?.secure_url,
@@ -61,7 +64,7 @@ const registerUser = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   );
 
-  if(!createdUser){
+  if (!createdUser) {
     throw new ApiError(500, "Failed to create user");
   }
   // return res
