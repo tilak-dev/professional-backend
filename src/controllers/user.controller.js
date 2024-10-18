@@ -73,64 +73,75 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, createdUser, true, "user created successfully"));
 });
 
-
-
-  // logic for login
+// logic for login
+// get user details from frontend
+// validation
+// generate JWT token refresh and access token
+// return token
+// check user existence and password
+const loginUser = asyncHandler(async (req, res) => {
   // get user details from frontend
+  const [email, username, password] = req.body;
   // validation
-  // generate JWT token refresh and access token
-  // return token
-  // check user existence and password
-const loginUser = asyncHandler(async (req, res)=>{
-  // get user details from frontend
-  const [email, username , password] = req.body
-  // validation
-  if(!email || !username){
+  if (!email || !username) {
     throw new ApiError(400, " username or email is required");
   }
-  if(!password){
+  if (!password) {
     throw new ApiError(400, " password is required");
   }
   // check if user exits
   const user = await User.findOne({
-    $or: [{username}, {email}],
-  })
+    $or: [{ username }, { email }],
+  });
   // if user not found
-  if(!user){
+  if (!user) {
     throw new ApiError(404, "user does not exits");
   }
   // check password
-  const isMatch = await user.isCorrectPassword(password)
-  if(!isMatch){
+  const isMatch = await user.isCorrectPassword(password);
+  if (!isMatch) {
     throw new ApiError(401, "Invalid password credentials");
   }
   // generate JWT token refresh and access token
-  const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id)
-  // return token
-  // check user existence and password
-})
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    user._id
+  );
+  // cookie
+  const loggedInUser = await User.find(user._id).select(
+    "-password -refreshToken "
+  ); // ye expensive ho jayega jyada daba query jyada ho gyi h , so avoid it
+  const options = {
+    httpOnly: true,
+    sameSite: "none",
+  };
 
+  //return
+  return res
+    .status(200)
+    .cookie("access_token", accessToken, options)
+    .cookie("refresh_token", refreshToken, options)
+    .json(new ApiResponse(200,{user: loggedInUser, accessToken, refreshToken}, true, "user logged in"));
+});
 
-// generate tokens 
-const generateAccessAndRefreshToken= async(userId)=>{
+// generate tokens
+const generateAccessAndRefreshToken = async (userId) => {
   try {
-    const user = await User.findById(userId)
-    if(!user){
-      throw new ApiError(404, "user not found")
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new ApiError(404, "user not found");
     }
-    const accessToken = user.generateAccessToken()
-    const refreshToken = user.generateRefreshToken()
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
 
-    //save 
-    await user.save({validateBeforeSave:false}) //learn about it 
+    //save
+    await user.save({ validateBeforeSave: false }); //learn about it
     return {
       accessToken,
-      refreshToken
-    }
-    
+      refreshToken,
+    };
   } catch (error) {
-    throw new ApiError(500, "something went wrong while generating tokens ")
+    throw new ApiError(500, "something went wrong while generating tokens ");
   }
-}
+};
 
 export { registerUser, loginUser };
