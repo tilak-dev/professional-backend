@@ -1,14 +1,14 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import uploadOnCloudinary from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 //algo / logic for registering
 
 const registerUser = asyncHandler(async (req, res) => {
   //get user details from frontend
-  const { fullName, email, username, password } = req.body();
+  const { fullName, email, username, password } = req.body
   //validation
   if (
     [email, username, password, fullName].some((field) => field?.trim() === "")
@@ -49,16 +49,16 @@ const registerUser = asyncHandler(async (req, res) => {
   // validation of user created successfully
   if (!user) {
     throw new ApiError(500, "Failed to create user");
-  } 
+  }
   // remove password and token from res
   const createdUser = await User.findById(user.id).select(
     "-password -refreshToken"
   );
 
   // return res
-  return res.status(201).json(
-    new ApiResponse(200,user,true, "user created successfully")
-  );
+  return res
+    .status(201)
+    .json(new ApiResponse(200, user, true, "user created successfully"));
 });
 
 export { registerUser };
