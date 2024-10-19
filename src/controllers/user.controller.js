@@ -76,9 +76,9 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   // get user details from frontend
-  const [email, username, password] = req.body;
+  const {email, username, password} = req.body;
   // validation
-  if (!email || !username) {
+  if (!email && !username) {
     throw new ApiError(400, " username or email is required");
   }
   if (!password) {
@@ -107,7 +107,7 @@ const loginUser = asyncHandler(async (req, res) => {
   ); // ye expensive ho jayega jyada daba query jyada ho gyi h , so avoid it
   const options = {
     httpOnly: true,
-    sameSite: "none",
+    secure: true,
   };
 
   //return
@@ -147,7 +147,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 };
 
 // logout user
-const logoutUser = asyncHandler(async () => {
+const logoutUser = asyncHandler(async (req,res) => {
   //logout user logic
   const id = req.user._id;
   const user = await User.findByIdAndUpdate(
@@ -157,6 +157,10 @@ const logoutUser = asyncHandler(async () => {
     },
     { new: true }
   );
+  //validate user
+  if (!user) {
+    throw new ApiError(404, "user not found");
+  }
   const options = {
     httpOnly: true,
     secure: true,
