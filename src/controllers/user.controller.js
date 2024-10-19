@@ -73,12 +73,7 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, createdUser, true, "user created successfully"));
 });
 
-// logic for login
-// get user details from frontend
-// validation
-// generate JWT token refresh and access token
-// return token
-// check user existence and password
+
 const loginUser = asyncHandler(async (req, res) => {
   // get user details from frontend
   const [email, username, password] = req.body;
@@ -118,9 +113,16 @@ const loginUser = asyncHandler(async (req, res) => {
   //return
   return res
     .status(200)
-    .cookie("access_token", accessToken, options)
-    .cookie("refresh_token", refreshToken, options)
-    .json(new ApiResponse(200,{user: loggedInUser, accessToken, refreshToken}, true, "user logged in"));
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        { user: loggedInUser, accessToken, refreshToken },
+        true,
+        "user logged in"
+      )
+    );
 });
 
 // generate tokens
@@ -144,4 +146,28 @@ const generateAccessAndRefreshToken = async (userId) => {
   }
 };
 
-export { registerUser, loginUser };
+// logout user
+const logoutUser = asyncHandler(async () => {
+  //logout user logic
+  const id = req.user._id;
+  const user = await User.findByIdAndUpdate(
+    id,
+    {
+      $set: { refreshToken: null },
+    },
+    { new: true }
+  );
+  const options = {
+    httpOnly: true,
+    secure: true,
+  }
+
+  return res
+   .status(200)
+   .clearCookie("accessToken", options)
+   .clearCookie("refreshToken", options)
+   .json(new ApiResponse(200,{},true,{ message: "User logged out" }));
+
+
+});
+export { registerUser, loginUser, logoutUser };
