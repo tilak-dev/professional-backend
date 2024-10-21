@@ -338,21 +338,21 @@ const uploadUserAvatar = asyncHandler(async () => {
     { new: true }
   ).select("-password");
   //validation
-if (!uploadUserAvatar) {
-  throw new ApiError(404, "User not found");
-}
-//return
+  if (!uploadUserAvatar) {
+    throw new ApiError(404, "User not found");
+  }
+  //return
 
-return res
-  .status(200)
-  .json(
-    new ApiResponse(
-      200,
-      uploadedImage,
-      true,
-      "user avatar updated successfully"
-    )
-  );
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        uploadedImage,
+        true,
+        "user avatar updated successfully"
+      )
+    );
 });
 
 //update user cover image
@@ -380,7 +380,7 @@ const uploadUserCover = asyncHandler(async () => {
     throw new ApiError(404, "User not found");
   }
   //return
-  
+
   return res
     .status(200)
     .json(
@@ -392,6 +392,81 @@ const uploadUserCover = asyncHandler(async () => {
       )
     );
 });
+
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  //validation
+  if (!username?.trim()) {
+    throw new ApiError(400, "Username is required");
+  }
+  //aggregation
+  const channelValue = await User.aggregate([
+    {
+      $match: {
+        username: username.trim().toLowerCase(),
+      },
+    }, // first pipe line
+    {
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"channel",
+        as:"subscribers"
+
+      }
+    },
+    {
+      $lookup:{
+        from:"subscriptions",
+        localField:"_id",
+        foreignField:"subscriber",
+        as:"subscribedTo"
+      }
+    },
+    {
+      $addFields:{
+        subscribersCount:{
+          $size:"$subscribers"
+        }, 
+        subscribedToCount:{
+          $size:"$subscribedTo"
+        },
+        isSubcribed:{
+          $cond:{
+            // if:{$eq:["$_id", req.user?._id]},
+            if:{$in:[req.user?._id, "$subscribers.subscriber"]},
+            then:true,
+            else:false
+          }//learn
+        }
+      }
+    },
+    {
+      $project:{
+        username:1,
+        avatar:1,
+        subscribersCount:1,
+        subscribedToCount:1,
+        isSubcribed:1,
+        coverImage:1,
+        email:1,
+        createdAt:1
+      }
+    }
+  ]);
+  //validation
+  if (!channelValue?.length) {
+    throw new ApiError(404, "User channel not found");
+  }
+  console.log("bhai chennel value",channelValue);
+
+  //return
+  return res
+   .status(200)
+   .json(new ApiResponse(200, channelValue[0], true, "User channel profile fetched successfully")); 
+
+
+});
 export {
   registerUser,
   loginUser,
@@ -402,4 +477,5 @@ export {
   updateUserDetails,
   uploadUserAvatar,
   uploadUserCover,
+  getUserChannelProfile,
 };
