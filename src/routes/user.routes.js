@@ -1,5 +1,17 @@
 import { Router } from "express";
-import { loginUser, logoutUser, refreshToken, registerUser } from "../controllers/user.controller.js";
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshToken,
+  changeUserPassword,
+  currentUser,
+  updateUserDetails,
+  uploadUserAvatar,
+  uploadUserCover,
+  getUserChannelProfile,
+  getUserWatchHistory,
+} from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -24,7 +36,32 @@ router.route("/logout").post(verifyJWT, logoutUser);
 //refresh token
 router.route("/refresh-token").post(refreshToken);
 
+//change password
+router.route("/change-password").put(verifyJWT, changeUserPassword);
+
+//get current user
+router.route("/current-user").get(verifyJWT, currentUser);
+
+//get uploadUserAvatar
+router
+  .route("/change-avatar")
+  .patch(verifyJWT, upload.single("avatar"), uploadUserAvatar);
+
+//get updateUserDetails
+router.route("/update-details").patch(verifyJWT, updateUserDetails);
+
+//get uploadUserCover,
+router
+  .route("/change-cover")
+  .patch(verifyJWT, upload.single("coverImage"), uploadUserCover);
+
+//get getUserChannelProfile
+router.route("/user-channel/:username").get(verifyJWT, getUserChannelProfile);
+
+//get getUserWatchHistory
+
+router.route("/watch-history").get(verifyJWT, getUserWatchHistory);
+
 export default router;
 
-
-// todo cloudinary previous image delete 
+// todo cloudinary previous image delete

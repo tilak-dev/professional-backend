@@ -408,116 +408,134 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       },
     }, // first pipe line
     {
-      $lookup:{
-        from:"subscriptions",
-        localField:"_id",
-        foreignField:"channel",
-        as:"subscribers"
-
-      }
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
     },
     {
-      $lookup:{
-        from:"subscriptions",
-        localField:"_id",
-        foreignField:"subscriber",
-        as:"subscribedTo"
-      }
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
     },
     {
-      $addFields:{
-        subscribersCount:{
-          $size:"$subscribers"
-        }, 
-        subscribedToCount:{
-          $size:"$subscribedTo"
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
         },
-        isSubcribed:{
-          $cond:{
+        subscribedToCount: {
+          $size: "$subscribedTo",
+        },
+        isSubcribed: {
+          $cond: {
             // if:{$eq:["$_id", req.user?._id]},
-            if:{$in:[req.user?._id, "$subscribers.subscriber"]},
-            then:true,
-            else:false
-          }//learn
-        }
-      }
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          }, //learn
+        },
+      },
     },
     {
-      $project:{
-        username:1,
-        avatar:1,
-        subscribersCount:1,
-        subscribedToCount:1,
-        isSubcribed:1,
-        coverImage:1,
-        email:1,
-        createdAt:1
-      }
-    }
+      $project: {
+        username: 1,
+        avatar: 1,
+        subscribersCount: 1,
+        subscribedToCount: 1,
+        isSubcribed: 1,
+        coverImage: 1,
+        email: 1,
+        createdAt: 1,
+      },
+    },
   ]);
   //validation
   if (!channelValue?.length) {
     throw new ApiError(404, "User channel not found");
   }
-  console.log("bhai chennel value",channelValue);
+  console.log("bhai chennel value", channelValue);
 
   //return
   return res
-   .status(200)
-   .json(new ApiResponse(200, channelValue[0], true, "User channel profile fetched successfully")); 
-
-
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        channelValue[0],
+        true,
+        "User channel profile fetched successfully"
+      )
+    );
 });
 
-
 //get use watch history
-const getUserWatchHistory = asyncHandler(async (req,res)=>{
-  const userId = req.user?._id //ye mongodb ki id nhi h string h mongoose behind the scenes id abstrat krtah h
-  if(!userId){
+const getUserWatchHistory = asyncHandler(async (req, res) => {
+  const userId = req.user?._id; //ye mongodb ki id nhi h string h mongoose behind the scenes id abstrat krtah h
+  if (!userId) {
     throw new ApiError(401, "Not authorized");
   }
   const user = await User.aggregate([
     {
-      $match:{
-        _id: new mongoose.Types.ObjectId(userId)//dimak chla
-      }
+      $match: {
+        _id: new mongoose.Types.ObjectId(userId), //dimak chla
+      },
     },
     {
-      $lookup:{
-        from:"videos",
-        localField:"watchHistory",
-        foreignField:"_id",
-        as:"watchHistory",
-        pipeline:[
+      $lookup: {
+        from: "videos",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
           {
-            $lookup:{
-              from:"users",
-              localField:"owner",
-              foreignField:"_id",
-              as:"owner",
-              pipeline:{
-                $project:{
-                  _id:1,
-                  fullName:1,
-                  username:1,
-                  avatar:1
-                }
-              }
-            }
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: {
+                $project: {
+                  _id: 1,
+                  fullName: 1,
+                  username: 1,
+                  avatar: 1,
+                },
+              },
+            },
           },
           {
-            $addFields:{
-              owner:{
-                $first:"$owner"
-              }
-            }
-          }
-        ]
-      }
-    }, 
-  ])
-}
-)
+            $addFields: {
+              owner: {
+                $first: "$owner",
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  if (!user?.length) {
+    throw new ApiError(404, "User watch history not found");
+  }
+
+  //return 
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0],
+        true,
+        "User watch history fetched successfully"
+      )
+    );
+});
 export {
   registerUser,
   loginUser,
@@ -529,4 +547,5 @@ export {
   uploadUserAvatar,
   uploadUserCover,
   getUserChannelProfile,
+  getUserWatchHistory,
 };
