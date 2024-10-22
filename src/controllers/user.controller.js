@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 //algo / logic for registering
 
@@ -467,6 +468,56 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 
 
 });
+
+
+//get use watch history
+const getUserWatchHistory = asyncHandler(async (req,res)=>{
+  const userId = req.user?._id //ye mongodb ki id nhi h string h mongoose behind the scenes id abstrat krtah h
+  if(!userId){
+    throw new ApiError(401, "Not authorized");
+  }
+  const user = await User.aggregate([
+    {
+      $match:{
+        _id: new mongoose.Types.ObjectId(userId)//dimak chla
+      }
+    },
+    {
+      $lookup:{
+        from:"videos",
+        localField:"watchHistory",
+        foreignField:"_id",
+        as:"watchHistory",
+        pipeline:[
+          {
+            $lookup:{
+              from:"users",
+              localField:"owner",
+              foreignField:"_id",
+              as:"owner",
+              pipeline:{
+                $project:{
+                  _id:1,
+                  fullName:1,
+                  username:1,
+                  avatar:1
+                }
+              }
+            }
+          },
+          {
+            $addFields:{
+              owner:{
+                $first:"$owner"
+              }
+            }
+          }
+        ]
+      }
+    }, 
+  ])
+}
+)
 export {
   registerUser,
   loginUser,
