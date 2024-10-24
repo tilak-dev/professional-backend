@@ -1,4 +1,4 @@
-import mongoose, { isValidObjectId } from "mongoose";
+import { isValidObjectId } from "mongoose";
 import { User } from "../models/user.model.js";
 import { Subscription } from "../models/subscription.model.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -17,7 +17,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
   if (!isValidObjectId(channelId)) {
     throw new ApiError(400, "Invalid Channel ID");
   }
-  if(!userId){
+  if (!userId) {
     throw new ApiError(401, "Not authorized");
   }
 
@@ -39,38 +39,79 @@ const toggleSubscription = asyncHandler(async (req, res) => {
   const cancelSubscription = await Subscription.findByIdAndDelete(
     userId,
     channelId
-  )
-  
+  );
+
   if (!cancelSubscription) {
     throw new ApiError(404, "Subscription not found");
   }
-  return res.status(200).json(new ApiResponse(200, "Subscription cancelled", true));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Subscription cancelled", true));
 });
 
 // controller to return subscriber list of a channel
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
   const { channelId } = req.params;
-  //validation 
-  if(!(channelId)){
-   throw new ApiError(400, "Missing parameters ");
+  //validation
+  if (!channelId) {
+    throw new ApiError(400, "Missing parameters ");
   }
   // check if channelId is valid
   const channelSubscribers = await Subscription.aggregate([
-    {$match:{
-      _id : isValidObjectId(channelId)
-    }},
-  ])
+    {
+      $match: {
+        _id: isValidObjectId(channelId),
+      },
+    },
+  ]);
+
+  if (!channelSubscribers) {
+    throw new ApiError(404, "No subscribers found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, channelSubscribers[0], true));
 });
-if (!channelSubscribers){
-  throw new ApiError(404, "No subscribers found");
-}
-
-return res.status(200).json(new ApiResponse(200, channelSubscribers[0], true));
-
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
+  //logic 
+  //get user informatiion
+  //get channel list
   const { subscriberId } = req.params;
+  const userId = req.user?._id
+  //validation error
+  if (!userId) {
+    throw new ApiError(401, "Not authorized");
+  }
+  if(!subscriberId){
+    throw new ApiError(400, "Missing parameters ");
+  }
+  
+  //get chennels
+  const subscribedChannels = await Subscription.aggregate([
+    {
+      $match: {
+        _id: isValidObjectId(userId) 
+      },
+    },
+    {
+      $lookup: {
+        from: "channel",
+        localField: "_id",
+        foreignField: "_id",
+        as: "channel",
+      },
+    },
+  ]);
+
+  if (!subscribedChannels) {
+    throw new ApiError(404, "No subscribed channels found");
+  }
+  // return res
+  return res.status(200).json(new ApiResponse(200, "channel list found succesfully ",subscribedChannels[0]));
+
 });
 
 export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };
