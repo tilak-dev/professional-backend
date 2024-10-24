@@ -23,7 +23,7 @@ router.route("/register").post(
   upload.fields([
     //middlenames
     { name: "avatar", maxCount: 1 },
-    { name: "cover_image", maxCount: 1 },
+    { name: "coverImage", maxCount: 1 },
   ]),
   registerUser
 );

@@ -47,6 +47,11 @@ const registerUser = asyncHandler(async (req, res) => {
   if (!uploadedAvatar) {
     throw new ApiError(400, "Failed to upload avatar to cloudinary");
   }
+  
+  const uploadedCoverImage= await uploadOnCloudinary(coverImageLocalPath);
+  if (!uploadedCoverImage) {
+    throw new ApiError(400, "Failed to upload cover image to cloudinary");
+  }
   console.log("uploaded cover image");
   //create user object- db entry
   const user = await User.create({
@@ -72,7 +77,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // return res
   return res
     .status(201)
-    .json(new ApiResponse(200, createdUser, true, "user created successfully"));
+    .json(new ApiResponse(200, "user created successfully", createdUser));
 });
 
 const loginUser = asyncHandler(async (req, res) => {

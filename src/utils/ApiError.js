@@ -6,8 +6,8 @@ class ApiError extends Error {
     stack,
     data = null
   ) {
-    this.statusCode = statusCode;
     super(message);
+    this.statusCode = statusCode;
     this.errors = errors;
     this.data = data;
     this.success = false;
