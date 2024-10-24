@@ -108,7 +108,12 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
   // cookie
-  const loggedInUser = await User.find(user._id).select(
+  const loggedInUser = await User.findByIdAndUpdate(user._id,
+    {
+      refreshToken: refreshToken,
+    },
+    { new: true }
+  ).select(
     "-password -refreshToken "
   ); // ye expensive ho jayega jyada daba query jyada ho gyi h , so avoid it
   const options = {
