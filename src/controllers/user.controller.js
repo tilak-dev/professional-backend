@@ -330,7 +330,7 @@ const updateUserDetails = asyncHandler(async (req, res) => {
 });
 
 //update user image
-const uploadUserAvatar = asyncHandler(async () => {
+const uploadUserAvatar = asyncHandler(async (req,res) => {
   //logic for image upload here
   const avaterLocalPath = req.file?.path;
   //validation
@@ -368,7 +368,7 @@ const uploadUserAvatar = asyncHandler(async () => {
 
 //update user cover image
 
-const uploadUserCover = asyncHandler(async () => {
+const uploadUserCover = asyncHandler(async (req,res) => {
   //logic for image upload here
   const coverLocalPath = req.file?.path;
   //validation
