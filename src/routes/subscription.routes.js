@@ -8,7 +8,7 @@ router.use(verifyJWT)
 
 
 // routes
-router.route("/toggle-subscribe").post(toggleSubscription)
+router.route("/toggle-subscribe/:channelId").post(toggleSubscription)
 
 router.route("/get-subscribers").post(getUserChannelSubscribers)
 
