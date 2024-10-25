@@ -13,13 +13,13 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
-  const user = req.user
+  const user = req.user;
   const files = req.files;
   //validate title and description
   if (!(title || description)) {
     throw new ApiError(400, "Title and description are required");
   }
-  //validate files 
+  //validate files
   if (!files || files.length === 0) {
     throw new ApiError(400, "No video and thumbbail file uploaded");
   }
@@ -27,47 +27,89 @@ const publishAVideo = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(400, "Invalid user id");
   }
-  const videoLocalPath = files?.videoFile[0]?.path
-  const thumbnailLocalPath = files?.thumbnail[0]?.path
+  const videoLocalPath = files?.videoFile[0]?.path;
+  const thumbnailLocalPath = files?.thumbnail[0]?.path;
 
   //upload them on cloudinary
-    const uploadedVideo = await uploadOnCloudinary(videoLocalPath);
-    const uploadThumbnail = await uploadOnCloudinary(thumbnailLocalPath);
+  const uploadedVideo = await uploadOnCloudinary(videoLocalPath);
+  const uploadThumbnail = await uploadOnCloudinary(thumbnailLocalPath);
 
-    //validation
-    if (!uploadedVideo ||!uploadThumbnail) {
-      throw new ApiError(400, "Failed to upload video or thumbnail to cloudinary");
-    }
+  //validation
+  if (!uploadedVideo || !uploadThumbnail) {
+    throw new ApiError(
+      400,
+      "Failed to upload video or thumbnail to cloudinary"
+    );
+  }
 
-    // create video object
-    const video = await Video.create({
-      title,
-      description,
-      owner: user?._id,
-      videoFile: uploadedVideo.url,
-      thumbnail: uploadThumbnail.url,
-      duration : uploadedVideo.duration
-    });
+  // create video object
+  const video = await Video.create({
+    title,
+    description,
+    owner: user?._id,
+    videoFile: uploadedVideo.url,
+    thumbnail: uploadThumbnail.url,
+    duration: uploadedVideo.duration,
+  });
 
-    //validation 
-    if (!video) {
-      throw new ApiError(500, "Failed to create video");
-    }
-    //return 
-    return res
-     .status(200)
-     .json(
-        new ApiResponse(
-          200,
-          "Video published successfully",
-          video,
-        )
-      );
+  //validation
+  if (!video) {
+    throw new ApiError(500, "Failed to create video");
+  }
+  //return
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Video published successfully", video));
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: get video by id
+  //validation
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid video id");
+  }
+  //aggregation
+  const video = await Video.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(videoId), //creating new instance
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+        pipeline:[
+            {
+                $project: {
+                    _id: 1,
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                },
+            }
+        ]
+      },
+    },
+    {
+        $addFields: {
+            owner: {
+                $arrayElemAt: ["$owner", 0],
+            }
+        }
+    }
+  ]);
+
+  //validation
+  if (!video || video.length === 0) {
+    throw new ApiError(404, "Video not found");
+  }
+  //return
+  return res
+   .status(200)
+   .json(new ApiResponse(200, "Video fetched successfully", video));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
