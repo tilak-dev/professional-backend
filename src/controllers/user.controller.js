@@ -47,8 +47,8 @@ const registerUser = asyncHandler(async (req, res) => {
   if (!uploadedAvatar) {
     throw new ApiError(400, "Failed to upload avatar to cloudinary");
   }
-  
-  const uploadedCoverImage= await uploadOnCloudinary(coverImageLocalPath);
+
+  const uploadedCoverImage = await uploadOnCloudinary(coverImageLocalPath);
   if (!uploadedCoverImage) {
     throw new ApiError(400, "Failed to upload cover image to cloudinary");
   }
@@ -108,14 +108,13 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
   // cookie
-  const loggedInUser = await User.findByIdAndUpdate(user._id,
+  const loggedInUser = await User.findByIdAndUpdate(
+    user._id,
     {
       refreshToken: refreshToken,
     },
     { new: true }
-  ).select(
-    "-password -refreshToken "
-  ); // ye expensive ho jayega jyada daba query jyada ho gyi h , so avoid it
+  ).select("-password -refreshToken "); // ye expensive ho jayega jyada daba query jyada ho gyi h , so avoid it
   const options = {
     httpOnly: true,
     secure: true,
@@ -330,7 +329,7 @@ const updateUserDetails = asyncHandler(async (req, res) => {
 });
 
 //update user image
-const uploadUserAvatar = asyncHandler(async (req,res) => {
+const uploadUserAvatar = asyncHandler(async (req, res) => {
   //logic for image upload here
   const avaterLocalPath = req.file?.path;
   //validation
@@ -368,7 +367,7 @@ const uploadUserAvatar = asyncHandler(async (req,res) => {
 
 //update user cover image
 
-const uploadUserCover = asyncHandler(async (req,res) => {
+const uploadUserCover = asyncHandler(async (req, res) => {
   //logic for image upload here
   const coverLocalPath = req.file?.path;
   //validation
@@ -468,7 +467,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
   if (!channelValue?.length) {
     throw new ApiError(404, "User channel not found");
   }
-  console.log("bhai chennel value", channelValue);
+  // console.log("bhai chennel value", channelValue);
 
   //return
   return res
@@ -476,9 +475,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        channelValue[0],
-        true,
-        "User channel profile fetched successfully"
+        "User channel profile fetched successfully",
+        channelValue[0]
       )
     );
 });
@@ -508,14 +506,16 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
               localField: "owner",
               foreignField: "_id",
               as: "owner",
-              pipeline: {
-                $project: {
-                  _id: 1,
-                  fullName: 1,
-                  username: 1,
-                  avatar: 1,
+              pipeline: [
+                {
+                  $project: {
+                    _id: 1,
+                    fullName: 1,
+                    username: 1,
+                    avatar: 1,
+                  },
                 },
-              },
+              ],
             },
           },
           {
@@ -534,17 +534,14 @@ const getUserWatchHistory = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User watch history not found");
   }
 
-  //return 
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        user[0],
-        true,
-        "User watch history fetched successfully"
-      )
-    );
+  //return
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      "User watch history fetched successfully",
+      user.length
+    )
+  );
 });
 export {
   registerUser,
