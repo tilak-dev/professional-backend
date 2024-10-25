@@ -158,11 +158,53 @@ const updateVideo = asyncHandler(async (req, res) => {
 
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: delete video
+  //validation
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid video id");
+  }
+  // delete video object
+  const video = await Video.findByIdAndDelete(videoId);
+  //validation
+  if (!video) {
+    throw new ApiError(404, "Video not found");
+  }
+  //return
+  return res
+   .status(200)
+   .json(new ApiResponse(200, "Video deleted successfully", video));
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+  const {isPublic} = req.body;
+  //validation
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid video id");
+  }
+  // toggle publish status
+  if(typeof isPublic!== 'boolean'){
+    throw new ApiError(400, "Invalid publish status");
+  }
+  // update video object
+  const video = await Video.findByIdAndUpdate(
+    videoId,
+    {
+        $set:{
+            isPublic
+        }
+    },
+    { new: true }
+  )
+  //validation
+  if (!video) {
+    throw new ApiError(500, "Failed to update video");
+  }
+  //return
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, "Video status updated successfully", video)
+  ) 
 });
 
 export {
