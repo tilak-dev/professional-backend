@@ -114,7 +114,46 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: update video details like title, description, thumbnail
+  const { title, description } = req.body;
+  const file = req.files
+  //validation
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid video id");
+  }
+  //check for title and description
+  if (!title && !description && !file) {
+    throw new ApiError(400, "Title and description are required");
+  }
+  //upload image 
+  let imageUrl
+  if( file &&file.length > 0 ){
+    imageUrl = await uploadOnCloudinary(file?.thumbnail[0]?.path)
+    if(!imageUrl){
+      throw new ApiError(400, "Failed to upload image to cloudinary")
+    }
+  }
+  // update video object
+  const video = await Video.findByIdAndUpdate(
+    videoId,
+    {
+        $set:{
+            title,
+            description,
+            thumbnail: imageUrl 
+        }
+    },
+    { new: true }
+  )
+  //validation
+  if (!video) {
+    throw new ApiError(500, "Failed to update video");
+  }
+  //return
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200, "Video updated successfully", video)
+  )
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
