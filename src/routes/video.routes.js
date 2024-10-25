@@ -5,6 +5,7 @@ import {
   updateVideo,
   deleteVideo,
   togglePublishStatus,
+  getAllVideos,
 } from "../controllers/video.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -16,19 +17,22 @@ router.use(verifyJWT);
 
 // create routes
 
-router.route("/").post(
-  upload.fields([
-    {
-      name: "thumbnail",
-      maxCount: 1,
-    },
-    {
-      name: "videoFile",
-      maxCount: 1,
-    },
-  ]),
-  publishAVideo
-);
+router
+  .route("/")
+  .get(getAllVideos)
+  .post(
+    upload.fields([
+      {
+        name: "thumbnail",
+        maxCount: 1,
+      },
+      {
+        name: "videoFile",
+        maxCount: 1,
+      },
+    ]),
+    publishAVideo
+  );
 
 router
   .route("/:videoId")
@@ -36,9 +40,8 @@ router
   .patch(upload.single("thumbnail"), updateVideo)
   .delete(deleteVideo);
 
-
-  //toggle isPublic 
-  router.route("/toggle/publish/:videoId").patch(togglePublishStatus)
+//toggle isPublic
+router.route("/toggle/publish/:videoId").patch(togglePublishStatus);
 export default router;
 
 //url/api/v1/videos/publish
