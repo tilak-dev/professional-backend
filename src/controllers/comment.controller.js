@@ -4,53 +4,87 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Comment } from "../models/comment.model.js";
 
-
 const getVideoComments = asyncHandler(async (req, res) => {
   //TODO: get all comments for a video
   const { videoId } = req.params;
   const { page = 1, limit = 10 } = req.query;
-  //validation error message 
+  //validation error message
   if (!isValidObjectId(videoId)) {
     throw new ApiError(400, "Invalid video id");
   }
   //options
   const options = {
-    page:parseInt(page , 10),
-    limit: parseInt(limit,10)
-  }
-
+    page: parseInt(page, 10),
+    limit: parseInt(limit, 10),
+  };
 });
 
 const addComment = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  const {content } = req.body;
-  const userId = req.user?._id
+  const { content } = req.body;
+  const userId = req.user?._id;
   // validation error message
-  if(!videoId || !isValidObjectId(videoId) || !content){
+  if (!videoId || !isValidObjectId(videoId) || !content) {
     throw new ApiError(400, "Invalid video id or content");
   }
-  //create comment 
+  //create comment
   const comment = new Comment({
     content,
     owner: userId,
-    onVideo: videoId
+    onVideo: videoId,
   });
   const saved = await comment.save();
-  if(!saved){
+  if (!saved) {
     throw new ApiError(500, "Failed to save comment");
   }
-  //return 
+  //return
   return res
-  .status(200)
-  .json(new ApiResponse(200, "comments posted in success", saved))
+    .status(200)
+    .json(new ApiResponse(200, "comments posted in success", saved));
 });
 
 const updateComment = asyncHandler(async (req, res) => {
-  // TODO: update a comment
+  const { commentId } = req.params;
+  const { content } = req.body;
+  // validation error message
+  if (!commentId || !isValidObjectId(commentId) || !content) {
+    throw new ApiError(400, "Invalid comment id or content");
+  }
+  //find comment by id and update content
+  const updatedComment = await Comment.findByIdAndUpdate(
+    commentId,
+    {
+      $set: {
+        content,
+      },
+    },
+    { new: true }
+  );
+  if (!updatedComment) {
+    throw new ApiError(404, "Comment not found");
+  }
+  //return
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "comments updated in success", updatedComment));
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
-  // TODO: delete a comment
+  const { commentId } = req.params;
+  // validation error message
+  if (!commentId || !isValidObjectId(commentId)) {
+    throw new ApiError(400, "Invalid comment id or content");
+  }
+  //find comment by id and update content
+  const deletedComment = await Comment.findByIdAndDelete(
+    commentId);
+  if (!deletedComment) {
+    throw new ApiError(404, "Comment not found");
+  }
+  //return
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "comment deleted in success", deletedComment));
 });
 
 export { getVideoComments, addComment, updateComment, deleteComment };
