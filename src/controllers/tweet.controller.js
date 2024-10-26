@@ -18,7 +18,7 @@ const createTweet = asyncHandler(async (req, res) => {
 
     const newTweet = await Tweet.create({
         content,
-        user: userId
+        owner: userId
     })
     //validation 
     if(!newTweet){
@@ -28,7 +28,18 @@ const createTweet = asyncHandler(async (req, res) => {
 })
 
 const getUserTweets = asyncHandler(async (req, res) => {
-    // TODO: get user tweets
+    const userId = req.user?._id
+    if(!userId ||!isValidObjectId(userId)){
+        throw new ApiError(400, "Invalid user id")
+    }
+    const tweets = await Tweet.find({owner: userId})
+    .populate("owner", {
+      select:["$username","$email","$avatar"],
+    })
+    if(!tweets){
+        throw new ApiError(500, "Failed to fetch tweets")
+    }
+    res.status(200).json(new ApiResponse(200,"tweets fetched successfully", tweets))
 })
 
 const updateTweet = asyncHandler(async (req, res) => {
