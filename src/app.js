@@ -21,14 +21,16 @@ app.use(cookieParser())
 import userRouter from "./routes/user.routes.js"
 import healthCheckRouter from "./routes/healthcheck.routes.js"
 import subscriptionRouter from "./routes/subscription.routes.js"
-import videRoouter from "./routes/video.routes.js"
+import videoRouter from "./routes/video.routes.js"
+import tweetRouter from "./routes/tweet.routes.js"
 
 
 //route declarations
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/health", healthCheckRouter)
 app.use("/api/v1/subscription", subscriptionRouter)
-app.use("/api/v1/video", videRoouter)
+app.use("/api/v1/video", videoRouter)
+app.use("/api/v1/tweet", tweetRouter)
 //exampl
 //url/api/v1/users/register
 
