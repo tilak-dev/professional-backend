@@ -17,6 +17,46 @@ const getVideoComments = asyncHandler(async (req, res) => {
     page: parseInt(page, 10),
     limit: parseInt(limit, 10),
   };
+  //find video comments
+  const comments = await Comment.aggregatePaginate(
+    Comment.aggregate([
+      {
+        $match: {
+          onVideo: new mongoose.Types.ObjectId(videoId),
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "ownerDetails",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                username: 1,
+                fullName: 1,
+                avatar: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+    ]),
+    options
+  );
+  //validation
+  if (!comments) {
+    throw new ApiError(404, "Comments not found for the given video");
+  }
+  //return
+  return res
+   .status(200)
+   .json(new ApiResponse(200, "Comments fetched successfully", comments.docs));
 });
 
 const addComment = asyncHandler(async (req, res) => {
@@ -76,8 +116,7 @@ const deleteComment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid comment id or content");
   }
   //find comment by id and update content
-  const deletedComment = await Comment.findByIdAndDelete(
-    commentId);
+  const deletedComment = await Comment.findByIdAndDelete(commentId);
   if (!deletedComment) {
     throw new ApiError(404, "Comment not found");
   }
