@@ -6,6 +6,7 @@ import {
   deleteVideo,
   togglePublishStatus,
   getAllVideos,
+  updatedViews,
 } from "../controllers/video.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -40,6 +41,7 @@ router
   .patch(upload.single("thumbnail"), updateVideo)
   .delete(deleteVideo);
 
+router.route("/view/:videoId").patch(updatedViews)
 //toggle isPublic
 router.route("/toggle/publish/:videoId").patch(togglePublishStatus);
 export default router;
