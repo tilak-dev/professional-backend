@@ -1,7 +1,5 @@
 import mongoose, { isValidObjectId } from "mongoose";
 import { Video } from "../models/video.model.js";
-import { Subscription } from "../models/subscription.model.js";
-import { Like } from "../models/like.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -30,11 +28,20 @@ const getChannelStats = asyncHandler(async (req, res) => {
       },
     },
     {
+      $lookup: {
+        from: "subscriptions",
+        localField: "owner",
+        foreignField: "channel",
+        as: "totalSubscribers",
+      },
+    },
+    {
       $group: {
         _id: userId,
         totalVideos: { $count: {} },
         totalViews: { $sum: "$views" },
-        totalLikes :{ $sum:{ $size: "$totalLikes"}}
+        totalLikes: { $sum: { $size: "$totalLikes" } },
+        totalSubscribers: { $sum: { $size: "$totalSubscribers" } },
       },
     },
   ]);
@@ -43,11 +50,9 @@ const getChannelStats = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No videos found for this channel");
   }
   // return
-  res.status(200).json(
-    new ApiResponse(200, "Channel stats fetched successfully", {
-      videoDetails: video,
-    })
-  );
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Channel stats fetched successfully", video));
 });
 
 const getChannelVideos = asyncHandler(async (req, res) => {
